@@ -1,18 +1,11 @@
 package com.origin.urlshortener.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
-
-public class ShortenUrlRequest {
-
-    @NotBlank(message = "url must not be blank")
-    private String url;
-
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
+public record ShortenUrlRequest(
+        @NotBlank(message = "url must not be blank")
+        @Size(max = 2048, message = "url must be at most 2048 characters")
+        String url
+) {
 }

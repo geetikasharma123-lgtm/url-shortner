@@ -8,6 +8,7 @@ import java.util.Set;
 public final class UrlValidator {
 
     private static final Set<String> ALLOWED_SCHEMES = Set.of("http", "https");
+    private static final int MAX_URL_LENGTH = 2048;
 
     /**
      * Validates that the URL is absolute and uses http/https and has a host.
@@ -18,13 +19,12 @@ public final class UrlValidator {
         }
 
         String trimmed = url.trim();
-        if (trimmed.isEmpty()) {
+        if (trimmed.isEmpty() || trimmed.length() > MAX_URL_LENGTH) {
             return false;
         }
 
         // Fast reject for whitespace/control characters anywhere in the URL.
-        if (trimmed.chars().anyMatch(Character::isWhitespace)
-                || trimmed.chars().anyMatch(Character::isISOControl)) {
+        if (containsUnsafeCharacters(trimmed)) {
             return false;
         }
 
@@ -33,7 +33,10 @@ public final class UrlValidator {
             String scheme = uri.getScheme();
             String host = uri.getHost();
 
-            if (scheme == null || host == null || host.isBlank()) {
+            if (!uri.isAbsolute() || scheme == null || host == null || host.isBlank()) {
+                return false;
+            }
+            if (uri.getRawUserInfo() != null) {
                 return false;
             }
 
@@ -41,5 +44,9 @@ public final class UrlValidator {
         } catch (URISyntaxException ex) {
             return false;
         }
+    }
+
+    private static boolean containsUnsafeCharacters(String value) {
+        return value.chars().anyMatch(ch -> Character.isWhitespace(ch) || Character.isISOControl(ch));
     }
 }

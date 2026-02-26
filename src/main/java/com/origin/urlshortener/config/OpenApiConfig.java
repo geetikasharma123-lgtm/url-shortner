@@ -13,8 +13,8 @@ public class OpenApiConfig {
     public OpenAPI urlShortenerOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("URL Shortener API")
-                        .description("Simple in-memory URL Shortener API")
+                        .title("URL Shortener")
+                        .description("Simple in-memory URL Shortener")
                         .version("v1")
                         .license(new License().name("MIT")));
     }

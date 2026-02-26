@@ -5,39 +5,56 @@ import com.origin.urlshortener.util.exception.InvalidUrlException;
 import com.origin.urlshortener.util.exception.UrlNotFoundException;
 import com.origin.urlshortener.util.store.InMemoryUrlStore;
 import com.origin.urlshortener.util.validation.UrlValidator;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UrlShortenerService {
 
-    private final InMemoryUrlStore store = new InMemoryUrlStore();
-    private final Base62CodeGenerator generator = new Base62CodeGenerator();
-    private final UrlValidator validator = new UrlValidator();
+    private static final int MAX_GENERATION_ATTEMPTS = 20;
+    private static final String INVALID_URL_MESSAGE = "Invalid URL format. Must be absolute http/https URL.";
 
+    private final InMemoryUrlStore store;
+    private final Base62CodeGenerator generator;
+    private final UrlValidator validator;
     private final String baseUrl;
     private final int codeLength;
 
+    @Autowired
     public UrlShortenerService(
             @Value("${app.base-url}") String baseUrl,
             @Value("${app.code-length:6}") int codeLength
     ) {
-        this.baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
-        this.codeLength = codeLength;
+        this(new InMemoryUrlStore(), new Base62CodeGenerator(), new UrlValidator(), baseUrl, codeLength);
+    }
+
+    UrlShortenerService(
+            InMemoryUrlStore store,
+            Base62CodeGenerator generator,
+            UrlValidator validator,
+            String baseUrl,
+            int codeLength
+    ) {
+        this.store = store;
+        this.generator = generator;
+        this.validator = validator;
+        this.baseUrl = normalizeBaseUrl(baseUrl);
+        this.codeLength = validateCodeLength(codeLength);
     }
 
     public ShortenResult shorten(String originalUrl) {
-        if (!validator.isValidHttpUrl(originalUrl)) {
-            throw new InvalidUrlException("Invalid URL format. Must be absolute http/https URL.");
+        String normalizedUrl = originalUrl == null ? null : originalUrl.trim();
+        if (!validator.isValidHttpUrl(normalizedUrl)) {
+            throw new InvalidUrlException(INVALID_URL_MESSAGE);
         }
 
-        return store.findCodeByUrl(originalUrl.trim())
-                .map(code -> new ShortenResult(code, buildShortUrl(code), originalUrl.trim()))
+        return store.findCodeByUrl(normalizedUrl)
+                .map(code -> new ShortenResult(code, buildShortUrl(code), normalizedUrl))
                 .orElseGet(() -> {
                     String code = generateUniqueCode();
-                    String url = originalUrl.trim();
-                    store.save(code, url);
-                    return new ShortenResult(code, buildShortUrl(code), url);
+                    store.save(code, normalizedUrl);
+                    return new ShortenResult(code, buildShortUrl(code), normalizedUrl);
                 });
     }
 
@@ -52,7 +69,7 @@ public class UrlShortenerService {
     }
 
     private String generateUniqueCode() {
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < MAX_GENERATION_ATTEMPTS; i++) {
             String code = generator.generate(codeLength);
             if (!store.codeExists(code)) {
                 return code;
@@ -65,6 +82,23 @@ public class UrlShortenerService {
         return baseUrl + "/" + code;
     }
 
-    public record ShortenResult(String code, String shortUrl, String originalUrl) {}
-    public record UrlInfo(String code, String originalUrl) {}
+    private static String normalizeBaseUrl(String baseUrl) {
+        if (baseUrl == null || baseUrl.isBlank()) {
+            throw new IllegalArgumentException("app.base-url must not be blank");
+        }
+        return baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
+    }
+
+    private static int validateCodeLength(int codeLength) {
+        if (codeLength < 1) {
+            throw new IllegalArgumentException("app.code-length must be greater than 0");
+        }
+        return codeLength;
+    }
+
+    public record ShortenResult(String code, String shortUrl, String originalUrl) {
+    }
+
+    public record UrlInfo(String code, String originalUrl) {
+    }
 }

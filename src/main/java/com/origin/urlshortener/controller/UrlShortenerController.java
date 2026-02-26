@@ -1,6 +1,5 @@
 package com.origin.urlshortener.controller;
 
-
 import com.origin.urlshortener.dto.ShortenUrlRequest;
 import com.origin.urlshortener.dto.ShortenUrlResponse;
 import com.origin.urlshortener.dto.UrlInfoResponse;
@@ -13,7 +12,11 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
 
@@ -21,7 +24,7 @@ import java.net.URI;
 @RestController
 public class UrlShortenerController {
 
-    private final com.origin.urlshortener.service.UrlShortenerService service;
+    private final UrlShortenerService service;
 
     public UrlShortenerController(UrlShortenerService service) {
         this.service = service;
@@ -30,12 +33,15 @@ public class UrlShortenerController {
     /**
      * Shorten a long URL.
      */
-    @Operation(summary = "Shorten a URL", description = "Creates a short, non-sequential code for a valid http/https URL.")
-@ApiResponse(responseCode = "200", description = "Short URL created")
-@ApiResponse(responseCode = "400", description = "Invalid input", content = @Content)
-@PostMapping("/api/shorten")
+    @Operation(
+            summary = "Shorten a URL",
+            description = "Creates a short, non-sequential code for a valid http/https URL."
+    )
+    @ApiResponse(responseCode = "200", description = "Short URL created")
+    @ApiResponse(responseCode = "400", description = "Invalid input", content = @Content)
+    @PostMapping("/api/shorten")
     public ResponseEntity<ShortenUrlResponse> shorten(@Valid @RequestBody ShortenUrlRequest request) {
-        var result = service.shorten(request.getUrl());
+        var result = service.shorten(request.url());
         return ResponseEntity.ok(new ShortenUrlResponse(result.code(), result.shortUrl(), result.originalUrl()));
     }
 
@@ -43,9 +49,9 @@ public class UrlShortenerController {
      * Redirect to original URL when a short code is requested.
      */
     @Operation(summary = "Redirect", description = "Redirects to the original URL for the provided short code.")
-@ApiResponse(responseCode = "302", description = "Redirect to original URL")
-@ApiResponse(responseCode = "404", description = "Code not found", content = @Content)
-@GetMapping("/{code}")
+    @ApiResponse(responseCode = "302", description = "Redirect to original URL")
+    @ApiResponse(responseCode = "404", description = "Code not found", content = @Content)
+    @GetMapping("/{code}")
     public ResponseEntity<Void> redirect(@PathVariable String code) {
         String target = service.resolve(code);
         return ResponseEntity.status(HttpStatus.FOUND)
@@ -57,9 +63,9 @@ public class UrlShortenerController {
      * Get original URL info for a short code
      */
     @Operation(summary = "Get URL info", description = "Returns the original URL for the provided short code.")
-@ApiResponse(responseCode = "200", description = "Original URL returned")
-@ApiResponse(responseCode = "404", description = "Code not found", content = @Content)
-@GetMapping("/api/info/{code}")
+    @ApiResponse(responseCode = "200", description = "Original URL returned")
+    @ApiResponse(responseCode = "404", description = "Code not found", content = @Content)
+    @GetMapping("/api/info/{code}")
     public ResponseEntity<UrlInfoResponse> info(@PathVariable String code) {
         var info = service.info(code);
         return ResponseEntity.ok(new UrlInfoResponse(info.code(), info.originalUrl()));

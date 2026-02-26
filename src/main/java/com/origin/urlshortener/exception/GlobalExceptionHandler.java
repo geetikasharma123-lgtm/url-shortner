@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.OffsetDateTime;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -30,14 +31,25 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest req) {
         String msg = ex.getBindingResult().getFieldErrors().stream()
-                .map(FieldError::getDefaultMessage)
+                .map(this::toFieldMessage)
+                .distinct()
                 .collect(Collectors.joining("; "));
+        if (msg.isBlank()) {
+            msg = "Validation failed";
+        }
         return build(HttpStatus.BAD_REQUEST, msg, req.getRequestURI());
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ApiErrorResponse> handleConstraintViolation(ConstraintViolationException ex, HttpServletRequest req) {
-        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), req.getRequestURI());
+        String msg = ex.getConstraintViolations().stream()
+                .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                .distinct()
+                .collect(Collectors.joining("; "));
+        if (msg.isBlank()) {
+            msg = "Constraint validation failed";
+        }
+        return build(HttpStatus.BAD_REQUEST, msg, req.getRequestURI());
     }
 
     @ExceptionHandler(Exception.class)
@@ -50,9 +62,14 @@ public class GlobalExceptionHandler {
                 OffsetDateTime.now(),
                 status.value(),
                 status.getReasonPhrase(),
-                message,
+                Objects.requireNonNullElse(message, status.getReasonPhrase()),
                 path
         );
         return ResponseEntity.status(status).body(body);
+    }
+
+    private String toFieldMessage(FieldError error) {
+        String detail = Objects.requireNonNullElse(error.getDefaultMessage(), "invalid value");
+        return error.getField() + ": " + detail;
     }
 }
