@@ -1,4 +1,4 @@
-# URL Shortener API (Spring Boot, In-Memory)
+# URL Shortener APP
 
 Simple URL Shortener.
 
