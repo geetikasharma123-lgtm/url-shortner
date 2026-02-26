@@ -1,4 +1,4 @@
-package com.origin.urlshortener.common.store;
+package com.origin.urlshortener.util.store;
 
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;

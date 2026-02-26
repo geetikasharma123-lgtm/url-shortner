@@ -1,7 +1,7 @@
 package com.origin.urlshortener.exception;
 
-import com.origin.urlshortener.common.exception.InvalidUrlException;
-import com.origin.urlshortener.common.exception.UrlNotFoundException;
+import com.origin.urlshortener.util.exception.InvalidUrlException;
+import com.origin.urlshortener.util.exception.UrlNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;

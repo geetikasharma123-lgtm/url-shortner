@@ -1,4 +1,4 @@
-package com.origin.urlshortener.common.validation;
+package com.origin.urlshortener.util.validation;
 
 import java.net.URI;
 import java.net.URISyntaxException;

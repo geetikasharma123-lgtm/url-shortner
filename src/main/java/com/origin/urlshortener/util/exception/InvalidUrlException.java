@@ -1,4 +1,4 @@
-package com.origin.urlshortener.common.exception;
+package com.origin.urlshortener.util.exception;
 
 public class InvalidUrlException extends RuntimeException {
 

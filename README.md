@@ -15,6 +15,31 @@ mvn spring-boot:run
 App runs on:
 - http://localhost:8080
 
+## API Testing
+# 1) Shorten URL
+**POST** `/api/shorten`
+
+Example:
+```bash
+curl -X POST http://localhost:8080/api/shorten -H "Content-Type: application/json" -d '{"url":"https://www.originenergy.com.au/electricity-gas/plans.html"}'
+```
+
+# 2) Redirect
+**GET** `/{code}`
+
+Example:
+```bash
+curl -I http://localhost:8080/a1B2c3
+```
+
+# 3) Info
+**GET** `/api/info/{code}`
+
+Example:
+```bash
+curl http://localhost:8080/api/info/a1B2c3
+```
+
 # Notes
 - In-memory store is reset on restart.
 - `app.base-url` and `app.code-length` configurable in `application.yml`.

@@ -1,10 +1,10 @@
 package com.origin.urlshortener.service;
 
-import com.origin.urlshortener.common.code.Base62CodeGenerator;
-import com.origin.urlshortener.common.exception.InvalidUrlException;
-import com.origin.urlshortener.common.exception.UrlNotFoundException;
-import com.origin.urlshortener.common.store.InMemoryUrlStore;
-import com.origin.urlshortener.common.validation.UrlValidator;
+import com.origin.urlshortener.util.code.Base62CodeGenerator;
+import com.origin.urlshortener.util.exception.InvalidUrlException;
+import com.origin.urlshortener.util.exception.UrlNotFoundException;
+import com.origin.urlshortener.util.store.InMemoryUrlStore;
+import com.origin.urlshortener.util.validation.UrlValidator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

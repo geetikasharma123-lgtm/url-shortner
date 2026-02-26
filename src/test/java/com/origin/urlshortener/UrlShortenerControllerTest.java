@@ -20,14 +20,14 @@ class UrlShortenerControllerTest {
 
     @Test
     void shorten_then_redirect_works() throws Exception {
-        String body = "{\"url\":\"https://example.com/some/long/path?x=1\"}";
+        String body = "{\"url\":\"https://example.com/test/long/path?x=1DGHGHSDH\"}";
         var shortenResult = mvc.perform(post("/api/shorten")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code", not(blankString())))
                 .andExpect(jsonPath("$.shortUrl", containsString("http://localhost:8080/")))
-                .andExpect(jsonPath("$.originalUrl", is("https://example.com/some/long/path?x=1")))
+                .andExpect(jsonPath("$.originalUrl", is("https://example.com/test/long/path?x=1DGHGHSDH")))
                 .andReturn();
 
         String json = shortenResult.getResponse().getContentAsString();
@@ -36,7 +36,7 @@ class UrlShortenerControllerTest {
         // redirect
         mvc.perform(get("/" + code))
                 .andExpect(status().isFound())
-                .andExpect(header().string("Location", "https://example.com/some/long/path?x=1"));
+                .andExpect(header().string("Location", "https://example.com/test/long/path?x=1DGHGHSDH"));
     }
 
     @Test
